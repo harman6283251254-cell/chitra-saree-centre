@@ -1,0 +1,50 @@
+@import "@fontsource/cormorant-garamond/500.css";
+@import "@fontsource/cormorant-garamond/600.css";
+@import "@fontsource/cormorant-garamond/500-italic.css";
+@import "@fontsource/jost/400.css";
+@import "@fontsource/jost/500.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-ivory text-ink font-sans antialiased; }
+  h1, h2, h3 { @apply font-display text-wine-deep; letter-spacing: -0.01em; }
+  :focus-visible { outline: 2px solid #B4884A; outline-offset: 2px; }
+  input, select, textarea { font-size: 16px; } /* prevents iOS zoom */
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+}
+
+@layer components {
+  .page { @apply mx-auto w-full max-w-page px-4 sm:px-6 lg:px-8; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[15px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-wine text-ivory hover:bg-wine-deep; }
+  .btn-gold { @apply btn bg-zari text-white hover:bg-[#9c7439]; }
+  .btn-outline { @apply btn border border-wine/30 text-wine hover:border-wine hover:bg-wine/5; }
+  .btn-ghost { @apply btn px-4 text-wine hover:bg-wine/5; }
+  .btn-wa { @apply btn bg-[#1F8F4E] text-white hover:bg-[#177a41]; }
+  .field { @apply block w-full rounded-lg border border-ink/15 bg-white px-3.5 py-2.5 text-ink placeholder:text-ink-mute focus:border-zari focus:outline-none focus:ring-2 focus:ring-zari/25; }
+  .label { @apply mb-1.5 block text-sm font-medium text-ink-soft; }
+  .section-title { @apply font-display text-3xl sm:text-4xl text-wine-deep; }
+  .prose-shop p { @apply mb-3 leading-relaxed; }
+}
+
+/* Zari border: the woven gold band from a saree pallu, used as the store's signature motif. */
+.zari-band {
+  height: 14px;
+  background:
+    radial-gradient(circle at 7px 7px, #D9BC87 2.2px, transparent 2.6px) 0 0 / 14px 14px,
+    linear-gradient(#B4884A, #B4884A) 0 0 / 100% 1.5px no-repeat,
+    linear-gradient(#B4884A, #B4884A) 0 100% / 100% 1.5px no-repeat;
+}
+.zari-band-dark {
+  height: 14px;
+  background:
+    radial-gradient(circle at 7px 7px, #B4884A 2.2px, transparent 2.6px) 0 0 / 14px 14px,
+    linear-gradient(#B4884A, #B4884A) 0 0 / 100% 1px no-repeat,
+    linear-gradient(#B4884A, #B4884A) 0 100% / 100% 1px no-repeat;
+}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }

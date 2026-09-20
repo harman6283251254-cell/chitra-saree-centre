@@ -1,0 +1,38 @@
+{
+  "name": "chitra-saree-centre",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "predev": "node scripts/fix-env.mjs",
+    "dev": "next dev",
+    "prebuild": "node scripts/fix-env.mjs",
+    "build": "next build",
+    "prestart": "node scripts/fix-env.mjs",
+    "start": "next build && next start",
+    "start:fast": "next start",
+    "diagnose": "node scripts/fix-env.mjs && node scripts/diagnose.mjs",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "create-admin": "node scripts/create-admin.mjs"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/jost": "^5.3.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.116.0",
+    "next": "^15.5.25",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~5.8"
+  }
+}
