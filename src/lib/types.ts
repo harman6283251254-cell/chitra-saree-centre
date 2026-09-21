@@ -43,7 +43,7 @@ export type OrderItem = {
 };
 export type Order = {
   id: string; order_number: string; public_token: string; customer_name: string; phone: string; email: string | null;
-  address: string; city: string; state: string; pincode: string; notes: string | null;
+  address: string; city: string; state: string; pincode: string; country?: string | null; user_id?: string | null; notes: string | null;
   subtotal: number; shipping_fee: number; total: number;
   payment_method: PaymentMethod; payment_status: PaymentStatus; order_status: OrderStatus;
   razorpay_order_id: string | null; razorpay_payment_id: string | null; upi_reference: string | null;

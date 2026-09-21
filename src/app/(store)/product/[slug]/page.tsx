@@ -118,7 +118,7 @@ export default async function ProductPage({ params }: Props) {
 
           <ul className="mt-8 space-y-3 text-sm text-ink-soft">
             <li className="flex gap-3"><Icon name="shield" className="h-5 w-5 shrink-0 text-zari" />Secure checkout. We never see or store your card or UPI details.</li>
-            <li className="flex gap-3"><Icon name="truck" className="h-5 w-5 shrink-0 text-zari" />Delivery across India. <Link href="/policies" className="underline">Returns & shipping info</Link></li>
+            <li className="flex gap-3"><Icon name="truck" className="h-5 w-5 shrink-0 text-zari" />We ship worldwide. <Link href="/policies" className="underline">Returns & shipping info</Link></li>
             <li className="flex gap-3"><Icon name="phone" className="h-5 w-5 shrink-0 text-zari" />Questions? Call <a href={`tel:+91${s.phone_primary}`} className="underline">+91 {s.phone_primary}</a></li>
           </ul>
         </div>

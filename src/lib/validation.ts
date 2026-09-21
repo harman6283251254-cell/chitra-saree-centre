@@ -9,18 +9,39 @@ const reqText = (label: string, max: number) =>
 export const indianMobile = z.string().transform((s) => s.replace(/\D/g, "").replace(/^(91|0)(?=\d{10}$)/, ""))
   .pipe(z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"));
 
+// International orders: looser but still sane checks — a phone with digits/+/spaces/
+// dashes, and a postal code of some kind. India keeps its stricter, exact rules below.
+const intlPhoneLoose = z.string().trim().transform(clean)
+  .pipe(z.string().min(6, "Enter a valid phone number").max(20, "Phone number is too long")
+    .regex(/^[0-9+()\-\s]+$/, "Use only digits, spaces, + and -"));
+const intlPostalLoose = z.string().trim().transform(clean)
+  .pipe(z.string().min(1, "Postal/ZIP code is required").max(20, "Postal/ZIP code is too long"));
+
 export const checkoutSchema = z.object({
   name: reqText("Name", 80),
-  phone: indianMobile,
+  country: reqText("Country", 60).default("India"),
+  phone: z.string(),
   email: z.string().trim().max(120).email("Enter a valid email").or(z.literal("")).optional().default(""),
   address: reqText("Address", 300),
   city: reqText("City", 60),
   state: reqText("State", 60),
-  pincode: z.string().trim().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode"),
+  pincode: z.string(),
   notes: text(300).optional().default(""),
   payment_method: z.enum(["cod", "razorpay", "upi"]),
   items: z.array(z.object({ product_id: z.string().uuid(), quantity: z.number().int().min(1).max(20) })).min(1).max(50),
-});
+}).superRefine((val, ctx) => {
+  const isIndia = val.country === "India";
+  const phoneCheck = (isIndia ? indianMobile : intlPhoneLoose).safeParse(val.phone);
+  if (!phoneCheck.success) ctx.addIssue({ code: "custom", path: ["phone"], message: phoneCheck.error.issues[0]?.message ?? "Enter a valid phone number" });
+  const pinCheck = isIndia
+    ? z.string().trim().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode").safeParse(val.pincode)
+    : intlPostalLoose.safeParse(val.pincode);
+  if (!pinCheck.success) ctx.addIssue({ code: "custom", path: ["pincode"], message: pinCheck.error.issues[0]?.message ?? "Enter a valid postal/ZIP code" });
+}).transform((val) => ({
+  ...val,
+  phone: val.country === "India" ? indianMobile.parse(val.phone) : intlPhoneLoose.parse(val.phone),
+  pincode: val.country === "India" ? val.pincode.trim() : intlPostalLoose.parse(val.pincode),
+}));
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
 
 const money = z.coerce.number({ error: "Enter a number" }).min(0, "Cannot be negative").max(10000000);

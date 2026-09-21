@@ -47,7 +47,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
           <Card>
             <h2 className="text-2xl">Customer & delivery address</h2>
             <p className="mt-3 font-medium">{o.customer_name}</p>
-            <p className="whitespace-pre-line text-ink-soft">{o.address}{"\n"}{o.city}, {o.state} – {o.pincode}</p>
+            <p className="whitespace-pre-line text-ink-soft">{o.address}{"\n"}{o.city}, {o.state} – {o.pincode}{o.country && o.country !== "India" ? `\n${o.country}` : ""}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <a href={`tel:+${intlPhone(o.phone)}`} className="btn-outline py-2 text-sm">Call {o.phone}</a>
               <a href={`https://wa.me/${intlPhone(o.phone)}?text=${encodeURIComponent(`Hello ${o.customer_name}, this is regarding your order #${o.order_number}.`)}`} target="_blank" rel="noopener noreferrer" className="btn-wa py-2 text-sm">WhatsApp customer</a>

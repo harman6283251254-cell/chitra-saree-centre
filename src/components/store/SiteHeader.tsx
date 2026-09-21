@@ -14,8 +14,8 @@ const NAV = [
   { href: "/contact", label: "Contact" },
 ];
 
-export default function SiteHeader({ phone, whatsappHref, categories }: {
-  phone: string | null; whatsappHref: string; categories: { name: string; slug: string }[];
+export default function SiteHeader({ phone, whatsappHref, categories, signedIn }: {
+  phone: string | null; whatsappHref: string; categories: { name: string; slug: string }[]; signedIn: boolean;
 }) {
   const { count, ready } = useCart();
   const [open, setOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function SiteHeader({ phone, whatsappHref, categories }: {
     <header className="sticky top-0 z-40 border-b border-zari/25 bg-ivory/95 backdrop-blur">
       <div className="hidden bg-wine text-ivory/90 md:block">
         <div className="page flex h-9 items-center justify-between text-[13px]">
-          <span>Visit our store or order online — we deliver across India</span>
+          <span>Worldwide Shipping — order online from anywhere</span>
           <div className="flex items-center gap-5">
             {phone && <a href={`tel:+91${phone}`} className="hover:text-white">Call {phone}</a>}
             <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="hover:text-white">WhatsApp us</a>
@@ -70,6 +70,13 @@ export default function SiteHeader({ phone, whatsappHref, categories }: {
           <button className="p-2 text-wine" aria-label="Search" onClick={() => setSearchOpen((s) => !s)}>
             <Icon name="search" className="h-[22px] w-[22px]" />
           </button>
+          <Link href={signedIn ? "/account" : "/login"} className="hidden items-center gap-1.5 p-2 text-wine sm:flex" aria-label={signedIn ? "My Account" : "Sign in"}>
+            <Icon name="user" className="h-[22px] w-[22px]" />
+            <span className="hidden text-sm md:inline">{signedIn ? "My Account" : "Sign In"}</span>
+          </Link>
+          <Link href={signedIn ? "/account" : "/login"} className="p-2 text-wine sm:hidden" aria-label={signedIn ? "My Account" : "Sign in"}>
+            <Icon name="user" className="h-[22px] w-[22px]" />
+          </Link>
           <Link href="/cart" className="relative p-2 text-wine" aria-label={`Cart, ${count} items`}>
             <Icon name="bag" className="h-[22px] w-[22px]" />
             {ready && count > 0 && (
@@ -102,6 +109,7 @@ export default function SiteHeader({ phone, whatsappHref, categories }: {
                 <Link key={n.href} href={n.href} className="border-b border-ink/5 py-3.5 text-lg text-ink">{n.label}</Link>
               ))}
               <Link href="/track-order" className="border-b border-ink/5 py-3.5 text-lg text-ink">Track your order</Link>
+              <Link href={signedIn ? "/account" : "/login"} className="border-b border-ink/5 py-3.5 text-lg text-ink">{signedIn ? "My Account" : "Sign In / Sign Up"}</Link>
             </nav>
             <div className="px-5 pb-2 pt-4 text-sm text-ink-mute">Shop by category</div>
             <div className="flex flex-wrap gap-2 px-5">

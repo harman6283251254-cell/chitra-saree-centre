@@ -9,6 +9,7 @@ import ProductImage from "@/components/store/ProductImage";
 import Icon from "@/components/Icon";
 import { formatINR } from "@/lib/format";
 import { INDIAN_STATES } from "@/lib/india";
+import { COUNTRIES } from "@/lib/countries";
 
 type Method = "cod" | "upi" | "razorpay";
 
@@ -17,6 +18,8 @@ export default function CheckoutPage() {
   const { quote, changed } = useCartQuote();
   const router = useRouter();
   const [method, setMethod] = useState<Method | "">("");
+  const [country, setCountry] = useState("India");
+  const isIndia = country === "India";
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const shipping = shippingFor(subtotal, quote);
@@ -45,7 +48,7 @@ export default function CheckoutPage() {
     if (!chosen) return setError("Please choose a payment option.");
     const fd = new FormData(e.currentTarget);
     const payload = {
-      name: fd.get("name"), phone: fd.get("phone"), email: fd.get("email") ?? "", address: fd.get("address"),
+      name: fd.get("name"), country, phone: fd.get("phone"), email: fd.get("email") ?? "", address: fd.get("address"),
       city: fd.get("city"), state: fd.get("state"), pincode: fd.get("pincode"), notes: fd.get("notes") ?? "",
       payment_method: chosen, items: items.map((i) => ({ product_id: i.id, quantity: i.qty })),
     };
@@ -82,16 +85,31 @@ export default function CheckoutPage() {
             <legend className="font-display text-2xl text-wine-deep">Delivery details</legend>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2"><label className="label" htmlFor="name">Full name</label><input id="name" name="name" required maxLength={80} autoComplete="name" className="field" /></div>
-              <div><label className="label" htmlFor="phone">Mobile number</label><input id="phone" name="phone" required inputMode="numeric" pattern="(\+?91)?[6-9][0-9]{9}" title="10-digit mobile number" maxLength={13} autoComplete="tel" className="field" placeholder="10-digit number" /></div>
+              <div><label className="label" htmlFor="country">Country</label>
+                <select id="country" name="country" required className="field" value={country} onChange={(e) => setCountry(e.target.value)} autoComplete="country-name">
+                  {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div><label className="label" htmlFor="phone">{isIndia ? "Mobile number" : "Phone number"}</label>
+                {isIndia
+                  ? <input id="phone" name="phone" required inputMode="numeric" pattern="(\+?91)?[6-9][0-9]{9}" title="10-digit mobile number" maxLength={13} autoComplete="tel" className="field" placeholder="10-digit number" />
+                  : <input id="phone" name="phone" required inputMode="tel" maxLength={20} autoComplete="tel" className="field" placeholder="Include country code, e.g. +1 555 123 4567" />}
+              </div>
               <div><label className="label" htmlFor="email">Email <span className="text-ink-mute">(optional)</span></label><input id="email" name="email" type="email" maxLength={120} autoComplete="email" className="field" /></div>
               <div className="sm:col-span-2"><label className="label" htmlFor="address">Address</label><textarea id="address" name="address" required rows={2} maxLength={300} autoComplete="street-address" className="field" placeholder="House no., street, area, landmark" /></div>
               <div><label className="label" htmlFor="city">City</label><input id="city" name="city" required maxLength={60} autoComplete="address-level2" className="field" /></div>
-              <div><label className="label" htmlFor="state">State</label>
-                <select id="state" name="state" required className="field" defaultValue="Punjab">
-                  {INDIAN_STATES.map((s) => <option key={s}>{s}</option>)}
-                </select>
+              <div><label className="label" htmlFor="state">{isIndia ? "State" : "State / Province / Region"}</label>
+                {isIndia
+                  ? <select id="state" name="state" required className="field" defaultValue="Punjab">
+                      {INDIAN_STATES.map((s) => <option key={s}>{s}</option>)}
+                    </select>
+                  : <input id="state" name="state" required maxLength={60} autoComplete="address-level1" className="field" placeholder="State / Province / Region" />}
               </div>
-              <div><label className="label" htmlFor="pincode">Pincode</label><input id="pincode" name="pincode" required inputMode="numeric" pattern="[1-9][0-9]{5}" title="6-digit pincode" maxLength={6} autoComplete="postal-code" className="field" /></div>
+              <div><label className="label" htmlFor="pincode">{isIndia ? "Pincode" : "Postal / ZIP code"}</label>
+                {isIndia
+                  ? <input id="pincode" name="pincode" required inputMode="numeric" pattern="[1-9][0-9]{5}" title="6-digit pincode" maxLength={6} autoComplete="postal-code" className="field" />
+                  : <input id="pincode" name="pincode" required maxLength={20} autoComplete="postal-code" className="field" placeholder="Postal / ZIP code" />}
+              </div>
               <div className="sm:col-span-2"><label className="label" htmlFor="notes">Note for us <span className="text-ink-mute">(optional)</span></label><input id="notes" name="notes" maxLength={300} className="field" placeholder="e.g. blouse size, preferred delivery time" /></div>
             </div>
           </fieldset>

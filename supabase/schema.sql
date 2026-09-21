@@ -164,6 +164,14 @@ create table if not exists public.orders (
 );
 create index if not exists orders_created_idx on public.orders(created_at desc);
 
+-- Customer accounts (additive, safe to re-run): links an order to the
+-- Supabase Auth user who placed it while logged in. Guest checkout is
+-- unaffected — user_id stays null for guest orders, exactly as before.
+alter table public.orders add column if not exists user_id uuid references auth.users(id) on delete set null;
+create index if not exists orders_user_idx on public.orders(user_id);
+alter table public.orders add column if not exists country text not null default 'India';
+
+
 create table if not exists public.order_items (
   id uuid primary key default gen_random_uuid(),
   order_id uuid not null references public.orders(id) on delete cascade,
@@ -208,6 +216,13 @@ create table if not exists public.settings (
   low_stock_threshold int not null default 3,
   updated_at timestamptz not null default now()
 );
+
+-- Optional: a different flat shipping fee for non-India orders. Leave null
+-- (the default) to keep charging the same domestic shipping_fee for every
+-- country, exactly as before, until the shop owner configures a real
+-- international rate in Admin → Settings.
+alter table public.settings add column if not exists international_shipping_fee numeric(10,2);
+
 insert into public.settings (id) values (1) on conflict (id) do nothing;
 
 -- ---------------------------------------------------------------------
@@ -331,6 +346,8 @@ declare
   v_qty int;
   v_img text;
   v_method text := p->>'payment_method';
+  v_user uuid := nullif(p->>'user_id','')::uuid;
+  v_country text := coalesce(nullif(p->>'country',''), 'India');
 begin
   if jsonb_typeof(p->'items') <> 'array' or jsonb_array_length(p->'items') = 0 then
     raise exception 'CART_EMPTY';
@@ -351,10 +368,10 @@ begin
   returning id into v_customer;
 
   insert into orders(customer_id, customer_name, phone, email, address, city, state, pincode, notes,
-                     subtotal, shipping_fee, total, payment_method, payment_status)
+                     subtotal, shipping_fee, total, payment_method, payment_status, user_id, country)
   values (v_customer, p->>'name', p->>'phone', nullif(p->>'email',''), p->>'address', p->>'city',
           p->>'state', p->>'pincode', nullif(p->>'notes',''), 0, 0, 0, v_method,
-          case when v_method = 'upi' then 'awaiting_verification' else 'pending' end)
+          case when v_method = 'upi' then 'awaiting_verification' else 'pending' end, v_user, v_country)
   returning id into v_order;
 
   perform set_config('csc.stock_reason', 'order', true);
@@ -383,6 +400,9 @@ begin
   perform set_config('csc.stock_reason', '', true);
 
   v_ship := coalesce(v_set.shipping_fee, 0);
+  if v_country <> 'India' and v_set.international_shipping_fee is not null then
+    v_ship := v_set.international_shipping_fee;
+  end if;
   if v_set.free_shipping_above is not null and v_subtotal >= v_set.free_shipping_above then
     v_ship := 0;
   end if;
@@ -434,6 +454,18 @@ begin
     execute format('create policy "admin all" on public.%I for all to authenticated using (public.is_admin()) with check (public.is_admin())', t);
   end loop;
 end $$;
+
+-- Customer accounts: a logged-in customer may read (never write) their own
+-- orders and the line items on them. Guest orders (user_id is null) and
+-- everyone else's orders stay invisible — admins still see everything via
+-- the "admin all" policy above.
+drop policy if exists "customer reads own orders" on public.orders;
+create policy "customer reads own orders" on public.orders for select to authenticated
+  using (user_id = auth.uid());
+
+drop policy if exists "customer reads own order items" on public.order_items;
+create policy "customer reads own order items" on public.order_items for select to authenticated
+  using (exists (select 1 from public.orders o where o.id = order_items.order_id and o.user_id = auth.uid()));
 
 drop policy if exists "admin update settings" on public.settings;
 create policy "admin update settings" on public.settings for update to authenticated

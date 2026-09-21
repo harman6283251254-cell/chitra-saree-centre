@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkoutSchema, firstError } from "@/lib/validation";
-import { createServiceSupabase } from "@/lib/supabase/server";
+import { createServiceSupabase, createServerSupabase } from "@/lib/supabase/server";
 import { razorpayConfigured } from "@/lib/razorpay";
 import { notifyOrderPlaced } from "@/lib/whatsapp-server";
 import { rateLimit } from "@/lib/rate-limit";
@@ -16,8 +16,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Online payment is not available yet. Please choose another payment option." }, { status: 400 });
   }
 
+  // If the shopper is logged in, attach the order to their account (server-side
+  // only — never trust a user_id sent from the browser). Guest checkout still
+  // works exactly as before when there's no session.
+  const sessionSb = await createServerSupabase();
+  const { data: { user } } = await sessionSb.auth.getUser();
+
   const sb = createServiceSupabase();
-  const { data, error } = await sb.rpc("place_order", { p: input }).single<{ order_id: string; order_number: string; public_token: string; total: number }>();
+  const { data, error } = await sb.rpc("place_order", { p: { ...input, user_id: user?.id ?? null } }).single<{ order_id: string; order_number: string; public_token: string; total: number }>();
   if (error || !data) {
     const msg = error?.message ?? "";
     if (msg.startsWith("OUT_OF_STOCK:")) return NextResponse.json({ error: `Sorry, "${msg.slice(13)}" is out of stock or has fewer pieces left than you selected.` }, { status: 409 });
